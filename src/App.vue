@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import SnippetList from './snippets/SnippetList.vue'
 import type { Snippet, SnippetDraft } from './snippets/snippet'
 import SnippetForm from './snippets/SnippetForm.vue'
+import Toast from './shared/Toast.vue'
+import ConfirmDialog from './shared/ConfirmDialog.vue'
 
 const snippets = ref<Snippet[]>([
   {
@@ -23,24 +25,58 @@ const snippets = ref<Snippet[]>([
   },
 ])
 
-const formError = ref<string | null>(null)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+
+const deleteDialogVisible = ref(false)
+const pendingDeleteId = ref<string | null>(null)
+const pendingDeleteTitle = ref('')
 
 function handleSubmitted(draft: SnippetDraft): void {
-  formError.value = null
-
   snippets.value.unshift({
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     ...draft,
   })
+
+  toastMessage.value = 'Snippet added.'
+  toastType.value = 'success'
 }
 
 function handleValidationError(message: string): void {
-  formError.value = message
+  toastMessage.value = message
+  toastType.value = 'error'
 }
 
-function handleDelete(id: string): void {
-  snippets.value = snippets.value.filter((snippet) => snippet.id !== id)
+function handleDeleteRequested(id: string): void {
+  const snippet = snippets.value.find((currentSnippet) => currentSnippet.id === id)
+
+  if (!snippet) {
+    return
+  }
+
+  pendingDeleteId.value = id
+  pendingDeleteTitle.value = snippet.title
+  deleteDialogVisible.value = true
+}
+
+function handleDeleteConfirmed(): void {
+  if (!pendingDeleteId.value) {
+    return
+  }
+
+  snippets.value = snippets.value.filter((snippet) => snippet.id !== pendingDeleteId.value)
+
+  closeDeleteDialog()
+
+  toastMessage.value = 'Snippet deleted.'
+  toastType.value = 'success'
+}
+
+function closeDeleteDialog(): void {
+  deleteDialogVisible.value = false
+  pendingDeleteId.value = null
+  pendingDeleteTitle.value = ''
 }
 </script>
 <template>
@@ -58,17 +94,22 @@ function handleDelete(id: string): void {
       >
         <h2 class="mb-4 text-xl font-semibold text-slate-900">Add Snippet</h2>
         <SnippetForm @submitted="handleSubmitted" @validation-error="handleValidationError" />
-        <p v-if="formError" class="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {{ formError }}
-        </p>
       </section>
 
       <section
         class="min-h-[220px] min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
       >
         <h2 class="mb-4 text-xl font-semibold text-slate-900">Your Snippets</h2>
-        <SnippetList :snippets="snippets" @delete-requested="handleDelete" />
+        <SnippetList :snippets="snippets" @delete-requested="handleDeleteRequested" />
       </section>
     </section>
+    <Toast :message="toastMessage" :type="toastType" />
+
+    <ConfirmDialog
+      :visible="deleteDialogVisible"
+      :snippet-title="pendingDeleteTitle"
+      @confirmed="handleDeleteConfirmed"
+      @cancelled="closeDeleteDialog"
+    />
   </main>
 </template>

@@ -1,0 +1,48 @@
+<script setup lang="ts">
+defineProps<{
+  visible: boolean
+  snippetTitle: string
+}>()
+
+const emit = defineEmits<{
+  (event: 'confirmed'): void
+  (event: 'cancelled'): void
+}>()
+</script>
+<template>
+  <div v-if="visible" class="fixed inset-0 z-50 grid place-items-center bg-slate-900/45 p-4">
+    <section
+      class="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 text-slate-900 shadow-xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-dialog-title"
+    >
+      <h2 id="delete-dialog-title" class="mb-2 text-xl font-semibold text-slate-900">
+        Delete snippet?
+      </h2>
+
+      <p class="mb-5 text-slate-600">
+        Are you sure you want to delete <strong>{{ snippetTitle }}</strong
+        >?
+      </p>
+
+      <div class="flex justify-end gap-2.5">
+        <button
+          class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+          type="button"
+          @click="emit('cancelled')"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="rounded-md border border-red-700 bg-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+          type="button"
+          @click="emit('confirmed')"
+        >
+          Delete
+        </button>
+      </div>
+    </section>
+  </div>
+</template>
