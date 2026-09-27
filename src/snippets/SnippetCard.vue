@@ -1,0 +1,48 @@
+<script setup lang="ts">
+import type { Snippet } from './snippet'
+
+const props = defineProps<{ snippet: Snippet }>()
+
+const emit = defineEmits<{
+  (event: 'delete-requested', id: string): void
+}>()
+
+function handleDelete(): void {
+  emit('delete-requested', props.snippet.id)
+}
+</script>
+
+<template>
+  <article class="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <header class="mb-3 flex items-start justify-between gap-4">
+      <div>
+        <h3 class="mb-1 text-lg font-semibold text-slate-900">
+          {{ props.snippet.title }}
+        </h3>
+        <p class="text-sm font-semibold text-blue-600">{{ props.snippet.language }}</p>
+      </div>
+
+      <button
+        type="button"
+        class="shrink-0 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+        @click="handleDelete"
+      >
+        Delete
+      </button>
+    </header>
+
+    <pre
+      class="mb-3 max-w-full overflow-x-auto rounded-md bg-slate-900 p-3.5 text-sm text-slate-50"
+    ><code>{{ props.snippet.code }}</code></pre>
+
+    <div class="flex flex-wrap gap-2">
+      <span
+        v-for="tag in props.snippet.tags"
+        :key="tag"
+        class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800"
+      >
+        {{ tag }}
+      </span>
+    </div>
+  </article>
+</template>
