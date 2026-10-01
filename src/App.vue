@@ -30,15 +30,18 @@ onMounted(async () => {
   }
 })
 
-function handleSubmitted(draft: SnippetDraft): void {
-  snippets.value.unshift({
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    ...draft,
-  })
+async function handleSubmitted(draft: SnippetDraft): Promise<void> {
+  try {
+    const createdSnippet = await snippetApi.create(draft)
 
-  toastMessage.value = 'Snippet added.'
-  toastType.value = 'success'
+    snippets.value.unshift(createdSnippet)
+
+    toastMessage.value = 'Snippet added.'
+    toastType.value = 'success'
+  } catch (error) {
+    toastMessage.value = error instanceof Error ? error.message : 'Failed to create snippet.'
+    toastType.value = 'error'
+  }
 }
 
 function handleValidationError(message: string): void {
