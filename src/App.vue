@@ -61,17 +61,26 @@ function handleDeleteRequested(id: string): void {
   deleteDialogVisible.value = true
 }
 
-function handleDeleteConfirmed(): void {
-  if (!pendingDeleteId.value) {
+async function handleDeleteConfirmed(): Promise<void> {
+  const id = pendingDeleteId.value
+
+  if (!id) {
     return
   }
 
-  snippets.value = snippets.value.filter((snippet) => snippet.id !== pendingDeleteId.value)
+  try {
+    await snippetApi.delete(id)
 
-  closeDeleteDialog()
+    snippets.value = snippets.value.filter((snippet) => snippet.id !== id)
 
-  toastMessage.value = 'Snippet deleted.'
-  toastType.value = 'success'
+    closeDeleteDialog()
+
+    toastMessage.value = 'Snippet deleted.'
+    toastType.value = 'success'
+  } catch (error) {
+    toastMessage.value = error instanceof Error ? error.message : 'Failed to delete snippet.'
+    toastType.value = 'error'
+  }
 }
 
 function closeDeleteDialog(): void {

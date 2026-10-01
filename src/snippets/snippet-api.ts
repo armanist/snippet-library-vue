@@ -28,4 +28,14 @@ export class SnippetApi {
 
     return (await response.json()) as Snippet
   }
+
+  async delete(id: string): Promise<void> {
+    const response = await fetch(`${this.apiBaseUrl}/snippets/${id}`, {
+      method: 'DELETE',
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete snippet (${response.status})`)
+    }
+  }
 }
