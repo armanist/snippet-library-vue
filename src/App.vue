@@ -1,29 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import SnippetList from './snippets/SnippetList.vue'
-import type { Snippet, SnippetDraft } from './snippets/snippet'
 import SnippetForm from './snippets/SnippetForm.vue'
 import Toast from './shared/Toast.vue'
 import ConfirmDialog from './shared/ConfirmDialog.vue'
+import { SnippetApi } from './snippets/snippet-api'
+import type { Snippet, SnippetDraft } from './snippets/snippet'
 
-const snippets = ref<Snippet[]>([
-  {
-    id: '1',
-    title: 'Array map',
-    language: 'typescript',
-    code: 'const labels = items.map((item) => item.label)',
-    tags: ['arrays', 'typescript'],
-    createdAt: '2026-09-27T00:00:00.000Z',
-  },
-  {
-    id: '2',
-    title: 'JSON response',
-    language: 'php',
-    code: 'return response()->json($data);',
-    tags: ['php', 'laravel'],
-    createdAt: '2026-09-27T00:00:00.000Z',
-  },
-])
+const snippetApi = new SnippetApi()
+const snippets = ref<Snippet[]>([])
+const isLoading = ref(true)
 
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
@@ -31,6 +17,18 @@ const toastType = ref<'success' | 'error'>('success')
 const deleteDialogVisible = ref(false)
 const pendingDeleteId = ref<string | null>(null)
 const pendingDeleteTitle = ref('')
+
+onMounted(async () => {
+  try {
+    const result = await snippetApi.getAll()
+    snippets.value = result.snippets
+  } catch (error) {
+    toastMessage.value = error instanceof Error ? error.message : 'Failed to load snippets.'
+    toastType.value = 'error'
+  } finally {
+    isLoading.value = false
+  }
+})
 
 function handleSubmitted(draft: SnippetDraft): void {
   snippets.value.unshift({
@@ -100,7 +98,8 @@ function closeDeleteDialog(): void {
         class="min-h-[220px] min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
       >
         <h2 class="mb-4 text-xl font-semibold text-slate-900">Your Snippets</h2>
-        <SnippetList :snippets="snippets" @delete-requested="handleDeleteRequested" />
+        <p v-if="isLoading" class="text-slate-600">Loading snippets...</p>
+        <SnippetList v-else :snippets="snippets" @delete-requested="handleDeleteRequested" />
       </section>
     </section>
     <Toast :message="toastMessage" :type="toastType" />
