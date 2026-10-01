@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import SnippetList from './snippets/SnippetList.vue'
 import SnippetForm from './snippets/SnippetForm.vue'
 import Toast from './shared/Toast.vue'
@@ -8,8 +8,10 @@ import { SnippetApi } from './snippets/snippet-api'
 import type { Snippet, SnippetDraft } from './snippets/snippet'
 
 const snippetApi = new SnippetApi()
+
 const snippets = ref<Snippet[]>([])
 const isLoading = ref(true)
+const searchTerm = ref('')
 
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
@@ -18,17 +20,45 @@ const deleteDialogVisible = ref(false)
 const pendingDeleteId = ref<string | null>(null)
 const pendingDeleteTitle = ref('')
 
-onMounted(async () => {
-  try {
-    const result = await snippetApi.getAll()
-    snippets.value = result.snippets
-  } catch (error) {
-    toastMessage.value = error instanceof Error ? error.message : 'Failed to load snippets.'
-    toastType.value = 'error'
-  } finally {
-    isLoading.value = false
-  }
-})
+watch(
+  searchTerm,
+  (search, oldSearch, onCleanup) => {
+    const controller = new AbortController()
+    const debounceDelay = oldSearch === undefined ? 0 : 300
+
+    const debounceTimer = setTimeout(async () => {
+      isLoading.value = true
+
+      try {
+        const result = await snippetApi.getAll(
+          {
+            search: search.trim(),
+            page: 1,
+            limit: 20,
+          },
+          controller.signal,
+        )
+
+        snippets.value = result.snippets
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          toastMessage.value = error instanceof Error ? error.message : 'Failed to load snippets.'
+          toastType.value = 'error'
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          isLoading.value = false
+        }
+      }
+    }, debounceDelay)
+
+    onCleanup(() => {
+      clearTimeout(debounceTimer)
+      controller.abort()
+    })
+  },
+  { immediate: true },
+)
 
 async function handleSubmitted(draft: SnippetDraft): Promise<void> {
   try {
@@ -110,8 +140,27 @@ function closeDeleteDialog(): void {
         class="min-h-[220px] min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
       >
         <h2 class="mb-4 text-xl font-semibold text-slate-900">Your Snippets</h2>
-        <p v-if="isLoading" class="text-slate-600">Loading snippets...</p>
-        <SnippetList v-else :snippets="snippets" @delete-requested="handleDeleteRequested" />
+        <label class="mb-4 grid gap-1.5 text-sm font-semibold text-slate-700">
+          Search
+          <input
+            v-model="searchTerm"
+            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900"
+            type="search"
+            name="search"
+            placeholder="Search snippets..."
+          />
+        </label>
+        <p v-if="isLoading" class="text-slate-600" role="status">
+          {{ snippets.length > 0 ? 'Updating snippets...' : 'Loading snippets...' }}
+        </p>
+        <p v-if="!isLoading && snippets.length === 0" class="text-slate-600">
+          {{ searchTerm.trim() ? 'No snippets match your search.' : 'No snippets yet.' }}
+        </p>
+        <SnippetList
+          v-if="snippets.length > 0"
+          :snippets="snippets"
+          @delete-requested="handleDeleteRequested"
+        />
       </section>
     </section>
     <Toast :message="toastMessage" :type="toastType" />

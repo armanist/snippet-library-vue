@@ -1,10 +1,24 @@
-import type { FindSnippetsResult, Snippet, SnippetDraft } from './snippet'
+import type { FindSnippetsResult, Snippet, SnippetDraft, SnippetListQuery } from './snippet'
 
 export class SnippetApi {
   private readonly apiBaseUrl = 'http://localhost:3000'
 
-  async getAll(): Promise<FindSnippetsResult> {
-    const response = await fetch(`${this.apiBaseUrl}/snippets`)
+  async getAll(query: SnippetListQuery = {}, signal?: AbortSignal): Promise<FindSnippetsResult> {
+    const url = new URL(`${this.apiBaseUrl}/snippets`)
+
+    if (query.search !== undefined) {
+      url.searchParams.set('search', query.search)
+    }
+
+    if (query.page !== undefined) {
+      url.searchParams.set('page', String(query.page))
+    }
+
+    if (query.limit !== undefined) {
+      url.searchParams.set('limit', String(query.limit))
+    }
+
+    const response = await fetch(url, { signal })
 
     if (!response.ok) {
       throw new Error(`Failed to load snippets (${response.status})`)

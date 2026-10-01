@@ -13,6 +13,12 @@ export interface Snippet {
 
 export type SnippetDraft = Omit<Snippet, 'id' | 'createdAt'>
 
+export interface SnippetListQuery {
+  search?: string
+  page?: number
+  limit?: number
+}
+
 export interface PaginationMetadata {
   page: number
   limit: number
