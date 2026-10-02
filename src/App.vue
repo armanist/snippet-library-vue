@@ -4,14 +4,17 @@ import SnippetList from './snippets/SnippetList.vue'
 import SnippetForm from './snippets/SnippetForm.vue'
 import Toast from './shared/Toast.vue'
 import ConfirmDialog from './shared/ConfirmDialog.vue'
+import Pagination from './shared/Pagination.vue'
 import { SnippetApi } from './snippets/snippet-api'
-import type { Snippet, SnippetDraft } from './snippets/snippet'
+import type { PaginationMetadata, Snippet, SnippetDraft } from './snippets/snippet'
 
 const snippetApi = new SnippetApi()
 
 const snippets = ref<Snippet[]>([])
 const isLoading = ref(true)
 const searchTerm = ref('')
+const pagination = ref<PaginationMetadata | null>(null)
+const currentPage = ref(1)
 
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
@@ -20,11 +23,14 @@ const deleteDialogVisible = ref(false)
 const pendingDeleteId = ref<string | null>(null)
 const pendingDeleteTitle = ref('')
 
+const pageSize = 2
+
 watch(
-  searchTerm,
-  (search, oldSearch, onCleanup) => {
+  [searchTerm, currentPage],
+  ([search, requestedPage], oldValues, onCleanup) => {
     const controller = new AbortController()
-    const debounceDelay = oldSearch === undefined ? 0 : 300
+    const previousSearch = oldValues?.[0]
+    const debounceDelay = previousSearch === undefined || previousSearch === search ? 0 : 300
 
     const debounceTimer = setTimeout(async () => {
       isLoading.value = true
@@ -33,13 +39,14 @@ watch(
         const result = await snippetApi.getAll(
           {
             search: search.trim(),
-            page: 1,
-            limit: 20,
+            page: requestedPage,
+            limit: pageSize,
           },
           controller.signal,
         )
 
         snippets.value = result.snippets
+        pagination.value = result.pagination
       } catch (error) {
         if (!controller.signal.aborted) {
           toastMessage.value = error instanceof Error ? error.message : 'Failed to load snippets.'
@@ -72,6 +79,18 @@ async function handleSubmitted(draft: SnippetDraft): Promise<void> {
     toastMessage.value = error instanceof Error ? error.message : 'Failed to create snippet.'
     toastType.value = 'error'
   }
+}
+
+function handleSearchInput(): void {
+  currentPage.value = 1
+}
+
+function handlePageChange(requestedPage: number): void {
+  if (!pagination.value || requestedPage < 1 || requestedPage > pagination.value.totalPages) {
+    return
+  }
+
+  currentPage.value = requestedPage
 }
 
 function handleValidationError(message: string): void {
@@ -144,6 +163,7 @@ function closeDeleteDialog(): void {
           Search
           <input
             v-model="searchTerm"
+            @input="handleSearchInput"
             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900"
             type="search"
             name="search"
@@ -160,6 +180,13 @@ function closeDeleteDialog(): void {
           v-if="snippets.length > 0"
           :snippets="snippets"
           @delete-requested="handleDeleteRequested"
+        />
+        <Pagination
+          v-if="pagination"
+          class="mt-5"
+          :pagination="pagination"
+          :disabled="isLoading"
+          @page-change="handlePageChange"
         />
       </section>
     </section>
