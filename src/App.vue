@@ -15,6 +15,7 @@ const isLoading = ref(true)
 const searchTerm = ref('')
 const pagination = ref<PaginationMetadata | null>(null)
 const currentPage = ref(1)
+const refreshKey = ref(0)
 
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
@@ -26,7 +27,7 @@ const pendingDeleteTitle = ref('')
 const pageSize = 2
 
 watch(
-  [searchTerm, currentPage],
+  [searchTerm, currentPage, refreshKey],
   ([search, requestedPage], oldValues, onCleanup) => {
     const controller = new AbortController()
     const previousSearch = oldValues?.[0]
@@ -69,9 +70,8 @@ watch(
 
 async function handleSubmitted(draft: SnippetDraft): Promise<void> {
   try {
-    const createdSnippet = await snippetApi.create(draft)
-
-    snippets.value.unshift(createdSnippet)
+    await snippetApi.create(draft)
+    refreshKey.value += 1
 
     toastMessage.value = 'Snippet added.'
     toastType.value = 'success'
@@ -120,7 +120,11 @@ async function handleDeleteConfirmed(): Promise<void> {
   try {
     await snippetApi.delete(id)
 
-    snippets.value = snippets.value.filter((snippet) => snippet.id !== id)
+    if (snippets.value.length === 1 && currentPage.value > 1) {
+      currentPage.value -= 1
+    } else {
+      refreshKey.value += 1
+    }
 
     closeDeleteDialog()
 
