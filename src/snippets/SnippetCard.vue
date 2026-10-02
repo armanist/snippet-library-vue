@@ -4,8 +4,13 @@ import type { Snippet } from './snippet'
 const props = defineProps<{ snippet: Snippet }>()
 
 const emit = defineEmits<{
+  (event: 'edit-requested', id: string): void
   (event: 'delete-requested', id: string): void
 }>()
+
+function handleEdit(): void {
+  emit('edit-requested', props.snippet.id)
+}
 
 function handleDelete(): void {
   emit('delete-requested', props.snippet.id)
@@ -22,13 +27,23 @@ function handleDelete(): void {
         <p class="text-sm font-semibold text-blue-600">{{ props.snippet.language }}</p>
       </div>
 
-      <button
-        type="button"
-        class="shrink-0 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
-        @click="handleDelete"
-      >
-        Delete
-      </button>
+      <div class="flex shrink-0 gap-2">
+        <button
+          type="button"
+          class="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+          @click="handleEdit"
+        >
+          Edit
+        </button>
+
+        <button
+          type="button"
+          class="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+          @click="handleDelete"
+        >
+          Delete
+        </button>
+      </div>
     </header>
 
     <pre

@@ -16,6 +16,7 @@ const searchTerm = ref('')
 const pagination = ref<PaginationMetadata | null>(null)
 const currentPage = ref(1)
 const refreshKey = ref(0)
+const editingSnippet = ref<Snippet | null>(null)
 
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
@@ -69,14 +70,28 @@ watch(
 )
 
 async function handleSubmitted(draft: SnippetDraft): Promise<void> {
-  try {
-    await snippetApi.create(draft)
-    refreshKey.value += 1
+  const snippetToEdit = editingSnippet.value
 
-    toastMessage.value = 'Snippet added.'
+  try {
+    if (snippetToEdit) {
+      await snippetApi.update(snippetToEdit.id, draft)
+
+      editingSnippet.value = null
+      toastMessage.value = 'Snippet updated.'
+    } else {
+      await snippetApi.create(draft)
+      toastMessage.value = 'Snippet added.'
+    }
+
+    refreshKey.value += 1
     toastType.value = 'success'
   } catch (error) {
-    toastMessage.value = error instanceof Error ? error.message : 'Failed to create snippet.'
+    toastMessage.value =
+      error instanceof Error
+        ? error.message
+        : snippetToEdit
+          ? 'Failed to update snippet.'
+          : 'Failed to create snippet.'
     toastType.value = 'error'
   }
 }
@@ -96,6 +111,20 @@ function handlePageChange(requestedPage: number): void {
 function handleValidationError(message: string): void {
   toastMessage.value = message
   toastType.value = 'error'
+}
+
+function handleEditRequested(id: string): void {
+  const snippet = snippets.value.find((currentSnippet) => currentSnippet.id === id)
+
+  if (!snippet) {
+    return
+  }
+
+  editingSnippet.value = snippet
+}
+
+function handleEditCancelled(): void {
+  editingSnippet.value = null
 }
 
 function handleDeleteRequested(id: string): void {
@@ -155,8 +184,15 @@ function closeDeleteDialog(): void {
       <section
         class="min-h-[220px] min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <h2 class="mb-4 text-xl font-semibold text-slate-900">Add Snippet</h2>
-        <SnippetForm @submitted="handleSubmitted" @validation-error="handleValidationError" />
+        <h2 class="mb-4 text-xl font-semibold text-slate-900">
+          {{ editingSnippet ? 'Edit Snippet' : 'Add Snippet' }}
+        </h2>
+        <SnippetForm
+          :editing-snippet="editingSnippet"
+          @submitted="handleSubmitted"
+          @validation-error="handleValidationError"
+          @cancelled="handleEditCancelled"
+        />
       </section>
 
       <section
@@ -183,6 +219,7 @@ function closeDeleteDialog(): void {
         <SnippetList
           v-if="snippets.length > 0"
           :snippets="snippets"
+          @edit-requested="handleEditRequested"
           @delete-requested="handleDeleteRequested"
         />
         <Pagination

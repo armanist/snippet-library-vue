@@ -1,4 +1,10 @@
-import type { FindSnippetsResult, Snippet, SnippetDraft, SnippetListQuery } from './snippet'
+import type {
+  FindSnippetsResult,
+  Snippet,
+  SnippetDraft,
+  SnippetListQuery,
+  SnippetUpdate,
+} from './snippet'
 
 export class SnippetApi {
   private readonly apiBaseUrl = 'http://localhost:3000'
@@ -38,6 +44,22 @@ export class SnippetApi {
 
     if (!response.ok) {
       throw new Error(`Failed to create snippet (${response.status})`)
+    }
+
+    return (await response.json()) as Snippet
+  }
+
+  async update(id: string, changes: SnippetUpdate): Promise<Snippet> {
+    const response = await fetch(`${this.apiBaseUrl}/snippets/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(changes),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to update snippet (${response.status})`)
     }
 
     return (await response.json()) as Snippet

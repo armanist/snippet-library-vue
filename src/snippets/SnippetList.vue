@@ -5,8 +5,13 @@ import type { Snippet } from './snippet'
 const props = defineProps<{ snippets: Snippet[] }>()
 
 const emit = defineEmits<{
+  (event: 'edit-requested', id: string): void
   (event: 'delete-requested', id: string): void
 }>()
+
+function handleEdit(id: string): void {
+  emit('edit-requested', id)
+}
 
 function handleDelete(id: string): void {
   emit('delete-requested', id)
@@ -19,6 +24,7 @@ function handleDelete(id: string): void {
       v-for="snippet in props.snippets"
       :key="snippet.id"
       :snippet="snippet"
+      @edit-requested="handleEdit"
       @delete-requested="handleDelete"
     />
   </div>

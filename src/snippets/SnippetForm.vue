@@ -1,17 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { languages } from './snippet'
-import type { Language, SnippetDraft } from './snippet'
+import type { Language, Snippet, SnippetDraft } from './snippet'
 
 const title = ref('')
 const language = ref<Language>(languages[0])
 const code = ref('')
 const tags = ref('')
 
+const props = defineProps<{
+  editingSnippet: Snippet | null
+}>()
+
 const emit = defineEmits<{
   (event: 'submitted', draft: SnippetDraft): void
   (event: 'validation-error', message: string): void
+  (event: 'cancelled'): void
 }>()
+
+watch(
+  () => props.editingSnippet,
+  (snippet) => {
+    title.value = snippet?.title ?? ''
+    language.value = snippet?.language ?? languages[0]
+    code.value = snippet?.code ?? ''
+    tags.value = snippet?.tags.join(', ') ?? ''
+  },
+  { immediate: true },
+)
+
+function resetForm(): void {
+  title.value = ''
+  language.value = languages[0]
+  code.value = ''
+  tags.value = ''
+}
 
 function handleSubmit(): void {
   const normalizedTitle = title.value.trim()
@@ -32,10 +55,9 @@ function handleSubmit(): void {
       .filter(Boolean),
   })
 
-  title.value = ''
-  language.value = languages[0]
-  code.value = ''
-  tags.value = ''
+  if (!props.editingSnippet) {
+    resetForm()
+  }
 }
 </script>
 <template>
@@ -86,7 +108,16 @@ function handleSubmit(): void {
       class="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
       type="submit"
     >
-      Add Snippet
+      {{ props.editingSnippet ? 'Save Changes' : 'Add Snippet' }}
+    </button>
+
+    <button
+      v-if="props.editingSnippet"
+      class="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+      type="button"
+      @click="emit('cancelled')"
+    >
+      Cancel
     </button>
   </form>
 </template>

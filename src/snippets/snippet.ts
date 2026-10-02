@@ -13,6 +13,8 @@ export interface Snippet {
 
 export type SnippetDraft = Omit<Snippet, 'id' | 'createdAt'>
 
+export type SnippetUpdate = Partial<SnippetDraft>
+
 export interface SnippetListQuery {
   search?: string
   page?: number
