@@ -1,3 +1,4 @@
+import type { SnippetDataSource } from './contracts/snippet-data-source'
 import type {
   FindSnippetsResult,
   Snippet,
@@ -6,7 +7,7 @@ import type {
   SnippetUpdate,
 } from './snippet'
 
-export class SnippetApi {
+export class SnippetApi implements SnippetDataSource {
   private readonly apiBaseUrl = 'http://localhost:3000'
 
   async getAll(query: SnippetListQuery = {}, signal?: AbortSignal): Promise<FindSnippetsResult> {
