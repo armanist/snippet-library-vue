@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/api-config'
 import type { SnippetDataSource } from './contracts/snippet-data-source'
 import type {
   FindSnippetsResult,
@@ -8,7 +9,7 @@ import type {
 } from './snippet'
 
 export class SnippetApi implements SnippetDataSource {
-  private readonly apiBaseUrl = 'http://localhost:3000'
+  private readonly apiBaseUrl = API_BASE_URL
 
   async getAll(query: SnippetListQuery = {}, signal?: AbortSignal): Promise<FindSnippetsResult> {
     const url = new URL(`${this.apiBaseUrl}/snippets`)
