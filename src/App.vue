@@ -2,9 +2,10 @@
 import { ref, watch } from 'vue'
 import SnippetList from './snippets/SnippetList.vue'
 import SnippetForm from './snippets/SnippetForm.vue'
-import Toast from './shared/Toast.vue'
+import Toast from './shared/toast/Toast.vue'
 import ConfirmDialog from './shared/ConfirmDialog.vue'
 import Pagination from './shared/Pagination.vue'
+import { useToast } from './shared/toast/use-toast.ts'
 import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
 import type { PaginationMetadata } from './snippets/contracts/find-snippet.ts'
 import type { SnippetDraft } from './snippets/contracts/create-snippet.ts'
@@ -20,8 +21,7 @@ const currentPage = ref(1)
 const refreshKey = ref(0)
 const editingSnippet = ref<Snippet | null>(null)
 
-const toastMessage = ref('')
-const toastType = ref<'success' | 'error'>('success')
+const toast = useToast();
 
 const deleteDialogVisible = ref(false)
 const pendingDeleteId = ref<string | null>(null)
@@ -53,8 +53,9 @@ watch(
         pagination.value = result.pagination
       } catch (error) {
         if (!controller.signal.aborted) {
-          toastMessage.value = error instanceof Error ? error.message : 'Failed to load snippets.'
-          toastType.value = 'error'
+          let message = error instanceof Error ? error.message : 'Failed to load snippets.'
+  
+          toast.showError(message)
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -79,22 +80,23 @@ async function handleSubmitted(draft: SnippetDraft): Promise<void> {
       await snippetApi.update(snippetToEdit.id, draft)
 
       editingSnippet.value = null
-      toastMessage.value = 'Snippet updated.'
+
+      toast.showSuccess('Snippet updated.')
     } else {
       await snippetApi.create(draft)
-      toastMessage.value = 'Snippet added.'
+
+      toast.showSuccess('Snippet added.')
     }
 
     refreshKey.value += 1
-    toastType.value = 'success'
   } catch (error) {
-    toastMessage.value =
-      error instanceof Error
+    let message = error instanceof Error
         ? error.message
         : snippetToEdit
           ? 'Failed to update snippet.'
           : 'Failed to create snippet.'
-    toastType.value = 'error'
+    
+    toast.showError(message)
   }
 }
 
@@ -108,11 +110,6 @@ function handlePageChange(requestedPage: number): void {
   }
 
   currentPage.value = requestedPage
-}
-
-function handleValidationError(message: string): void {
-  toastMessage.value = message
-  toastType.value = 'error'
 }
 
 function handleEditRequested(id: string): void {
@@ -159,11 +156,11 @@ async function handleDeleteConfirmed(): Promise<void> {
 
     closeDeleteDialog()
 
-    toastMessage.value = 'Snippet deleted.'
-    toastType.value = 'success'
+    toast.showSuccess('Snippet deleted.')
   } catch (error) {
-    toastMessage.value = error instanceof Error ? error.message : 'Failed to delete snippet.'
-    toastType.value = 'error'
+    let message = error instanceof Error ? error.message : 'Failed to delete snippet.'
+    
+    toast.showError(message)
   }
 }
 
@@ -192,7 +189,7 @@ function closeDeleteDialog(): void {
         <SnippetForm
           :editing-snippet="editingSnippet"
           @submitted="handleSubmitted"
-          @validation-error="handleValidationError"
+          @validation-error="toast.showError"
           @cancelled="handleEditCancelled"
         />
       </section>
@@ -233,7 +230,7 @@ function closeDeleteDialog(): void {
         />
       </section>
     </section>
-    <Toast :message="toastMessage" :type="toastType" />
+    <Toast :message="toast.message.value" :type="toast.type.value" />
 
     <ConfirmDialog
       :visible="deleteDialogVisible"
