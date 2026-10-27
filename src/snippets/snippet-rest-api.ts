@@ -8,7 +8,7 @@ import type {
   SnippetUpdate,
 } from './snippet'
 
-export class SnippetApi implements SnippetDataSource {
+export class SnippetRestApi implements SnippetDataSource {
   private readonly apiBaseUrl = API_BASE_URL
 
   async getAll(query: SnippetListQuery = {}, signal?: AbortSignal): Promise<FindSnippetsResult> {
