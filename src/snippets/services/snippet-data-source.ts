@@ -1,4 +1,4 @@
-import type { SnippetDataSource } from "./contracts/snippet-data-source"
+import type { SnippetDataSource } from "../contracts/snippet-data-source"
 import { SnippetRestApi } from "./snippet-rest-api"
 import { SnippetGraphqlApi } from "./snippet-graphql-api"
 

@@ -1,12 +1,12 @@
 import { API_BASE_URL } from '@/api-config'
-import type { SnippetDataSource } from './contracts/snippet-data-source'
+import type { SnippetDataSource } from '../contracts/snippet-data-source'
 import type {
   FindSnippetsResult,
   Snippet,
   SnippetDraft,
   SnippetListQuery,
   SnippetUpdate,
-} from './snippet'
+} from '../snippet'
 
 export class SnippetRestApi implements SnippetDataSource {
   private readonly apiBaseUrl = API_BASE_URL

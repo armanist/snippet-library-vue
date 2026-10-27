@@ -1,19 +1,19 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client"
-import { GET_SNIPPETS_QUERY } from "./graphql/snippet-queries"
+import { GET_SNIPPETS_QUERY } from "../graphql/snippet-queries"
 import { API_BASE_URL } from "@/api-config"
 import { 
     CREATE_SNIPPET_MUTATION, 
     DELETE_SNIPPET_MUTATION, 
     UPDATE_SNIPPET_MUTATION 
-} from "./graphql/snippet-mutations";
+} from "../graphql/snippet-mutations";
 import type {
     FindSnippetsResult,
     Snippet,
     SnippetDraft,
     SnippetListQuery,
     SnippetUpdate
-} from "./snippet"
-import type { SnippetDataSource } from "./contracts/snippet-data-source";
+} from "../snippet"
+import type { SnippetDataSource } from "../contracts/snippet-data-source";
 
 export class SnippetGraphqlApi implements SnippetDataSource {
     private readonly apiBaseUrl = API_BASE_URL;
