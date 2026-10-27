@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { languages } from './snippet'
-import type { Language, Snippet, SnippetDraft } from './snippet'
+import { languages } from './contracts/snippet-language'
+import type { Language } from './contracts/snippet-language'
+import type { Snippet } from './contracts/snippet'
+import type { SnippetDraft } from './contracts/create-snippet'
+
 
 const title = ref('')
 const language = ref<Language>(languages[0])

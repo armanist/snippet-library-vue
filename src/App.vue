@@ -6,7 +6,9 @@ import Toast from './shared/Toast.vue'
 import ConfirmDialog from './shared/ConfirmDialog.vue'
 import Pagination from './shared/Pagination.vue'
 import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
-import type { PaginationMetadata, Snippet, SnippetDraft } from './snippets/snippet'
+import type { PaginationMetadata } from './snippets/contracts/find-snippet.ts'
+import type { SnippetDraft } from './snippets/contracts/create-snippet.ts'
+import type { Snippet } from './snippets/contracts/snippet.ts'
 
 const snippetApi = SNIPPET_DATA_SOURCE
 

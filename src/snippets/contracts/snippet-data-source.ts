@@ -1,10 +1,7 @@
-import type {
-    FindSnippetsResult,
-    Snippet,
-    SnippetDraft,
-    SnippetListQuery,
-    SnippetUpdate,
-} from '../snippet'
+import type { SnippetDraft } from './create-snippet'
+import type { FindSnippetsResult, SnippetListQuery } from './find-snippet'
+import type { Snippet } from './snippet'
+import type { SnippetUpdate } from './update-snippet'
 
 export interface SnippetDataSource {
     getAll(query: SnippetListQuery, signal?: AbortSignal): Promise<FindSnippetsResult>

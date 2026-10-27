@@ -6,13 +6,11 @@ import {
     DELETE_SNIPPET_MUTATION, 
     UPDATE_SNIPPET_MUTATION 
 } from "../graphql/snippet-mutations";
-import type {
-    FindSnippetsResult,
-    Snippet,
-    SnippetDraft,
-    SnippetListQuery,
-    SnippetUpdate
-} from "../snippet"
+import type { SnippetDraft } from "../contracts/create-snippet"
+import type { FindSnippetsResult, SnippetListQuery } from "../contracts/find-snippet"
+import type { Snippet } from "../contracts/snippet"
+import type { SnippetUpdate } from "../contracts/update-snippet"
+
 import type { SnippetDataSource } from "../contracts/snippet-data-source";
 
 export class SnippetGraphqlApi implements SnippetDataSource {

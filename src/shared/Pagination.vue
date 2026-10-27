@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { PaginationMetadata } from '@/snippets/snippet'
-
+import type { PaginationMetadata } from '@/snippets/contracts/find-snippet';
 const props = defineProps<{
   pagination: PaginationMetadata
   disabled: boolean
