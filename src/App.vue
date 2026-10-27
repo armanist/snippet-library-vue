@@ -3,9 +3,10 @@ import { ref, watch } from 'vue'
 import SnippetList from './snippets/SnippetList.vue'
 import SnippetForm from './snippets/SnippetForm.vue'
 import Toast from './shared/toast/Toast.vue'
-import ConfirmDialog from './shared/ConfirmDialog.vue'
+import ConfirmDialog from './shared/confirm-dialog/ConfirmDialog.vue'
 import Pagination from './shared/Pagination.vue'
 import { useToast } from './shared/toast/use-toast.ts'
+import { useConfirmDialog } from './shared/confirm-dialog/use-confirm-dialog.ts'
 import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
 import type { PaginationMetadata } from './snippets/contracts/find-snippet.ts'
 import type { SnippetDraft } from './snippets/contracts/create-snippet.ts'
@@ -22,10 +23,7 @@ const refreshKey = ref(0)
 const editingSnippet = ref<Snippet | null>(null)
 
 const toast = useToast();
-
-const deleteDialogVisible = ref(false)
-const pendingDeleteId = ref<string | null>(null)
-const pendingDeleteTitle = ref('')
+const confirmDialog = useConfirmDialog();
 
 const pageSize = 2
 
@@ -133,13 +131,11 @@ function handleDeleteRequested(id: string): void {
     return
   }
 
-  pendingDeleteId.value = id
-  pendingDeleteTitle.value = snippet.title
-  deleteDialogVisible.value = true
+  confirmDialog.open(snippet.id, snippet.title)
 }
 
 async function handleDeleteConfirmed(): Promise<void> {
-  const id = pendingDeleteId.value
+  const id = confirmDialog.pendingId.value
 
   if (!id) {
     return
@@ -154,7 +150,7 @@ async function handleDeleteConfirmed(): Promise<void> {
       refreshKey.value += 1
     }
 
-    closeDeleteDialog()
+    confirmDialog.close()
 
     toast.showSuccess('Snippet deleted.')
   } catch (error) {
@@ -164,11 +160,6 @@ async function handleDeleteConfirmed(): Promise<void> {
   }
 }
 
-function closeDeleteDialog(): void {
-  deleteDialogVisible.value = false
-  pendingDeleteId.value = null
-  pendingDeleteTitle.value = ''
-}
 </script>
 <template>
   <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -233,10 +224,10 @@ function closeDeleteDialog(): void {
     <Toast :message="toast.message.value" :type="toast.type.value" />
 
     <ConfirmDialog
-      :visible="deleteDialogVisible"
-      :snippet-title="pendingDeleteTitle"
+      :visible="confirmDialog.visible.value"
+      :snippet-title="confirmDialog.pendingTitle.value"
       @confirmed="handleDeleteConfirmed"
-      @cancelled="closeDeleteDialog"
+      @cancelled="confirmDialog.close"
     />
   </main>
 </template>
