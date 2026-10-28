@@ -5,16 +5,11 @@ import Toast from './shared/toast/Toast.vue'
 import ConfirmDialog from './shared/confirm-dialog/ConfirmDialog.vue'
 import Pagination from './shared/Pagination.vue'
 import { useToast } from './shared/toast/use-toast.ts'
-import { useConfirmDialog } from './shared/confirm-dialog/use-confirm-dialog.ts'
 import { useSnippetList } from './snippets/snippet-list/use-snippet-list.ts'
 import { useSnippetForm } from './snippets/snippet-form/use-snippet-form'
-import { notifySnippetChanges } from './snippets/services/snippet-changes.ts'
-import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
-import type { Snippet } from './snippets/contracts/snippet.ts'
+import { useSnippetDelete } from './snippets/snippet-delete/use-snippet-delete.ts'
 
-const snippetApi = SNIPPET_DATA_SOURCE
-const toast = useToast();
-const confirmDialog = useConfirmDialog();
+const toast = useToast()
 
 const {
   snippets,
@@ -32,31 +27,13 @@ const {
   handleSubmitted
 } = useSnippetForm()
 
-function handleDeleteRequested(snippet: Snippet): void {
-  confirmDialog.open(snippet.id, snippet.title)
-}
-
-async function handleDeleteConfirmed(): Promise<void> {
-  const id = confirmDialog.pendingId.value
-
-  if (!id) {
-    return
-  }
-
-  try {
-    await snippetApi.delete(id)
-
-    notifySnippetChanges()
-
-    confirmDialog.close()
-
-    toast.showSuccess('Snippet deleted.')
-  } catch (error) {
-    let message = error instanceof Error ? error.message : 'Failed to delete snippet.'
-    
-    toast.showError(message)
-  }
-}
+const {
+  dialogVisible,
+  dialogTitle,
+  cancelDelete,
+  handleDeleteRequested,
+  handleDeleteConfirmed
+} = useSnippetDelete()
 
 </script>
 <template>
@@ -122,10 +99,10 @@ async function handleDeleteConfirmed(): Promise<void> {
     <Toast :message="toast.message.value" :type="toast.type.value" />
 
     <ConfirmDialog
-      :visible="confirmDialog.visible.value"
-      :snippet-title="confirmDialog.pendingTitle.value"
+      :visible="dialogVisible"
+      :snippet-title="dialogTitle"
       @confirmed="handleDeleteConfirmed"
-      @cancelled="confirmDialog.close"
+      @cancelled="cancelDelete"
     />
   </main>
 </template>
