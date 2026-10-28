@@ -1,23 +1,20 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import SnippetList from './snippets/snippet-list/SnippetList.vue'
-import SnippetForm from './snippets/SnippetForm.vue'
+import SnippetForm from './snippets/snippet-form/SnippetForm.vue'
 import Toast from './shared/toast/Toast.vue'
 import ConfirmDialog from './shared/confirm-dialog/ConfirmDialog.vue'
 import Pagination from './shared/Pagination.vue'
 import { useToast } from './shared/toast/use-toast.ts'
 import { useConfirmDialog } from './shared/confirm-dialog/use-confirm-dialog.ts'
 import { useSnippetList } from './snippets/snippet-list/use-snippet-list.ts'
+import { useSnippetForm } from './snippets/snippet-form/use-snippet-form'
 import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
 import type { SnippetDraft } from './snippets/contracts/create-snippet.ts'
-import type { Snippet } from './snippets/contracts/snippet.ts'
 
 const snippetApi = SNIPPET_DATA_SOURCE
-
-const editingSnippet = ref<Snippet | null>(null)
-
 const toast = useToast();
 const confirmDialog = useConfirmDialog();
+
 const {
   snippets,
   isLoading,
@@ -29,6 +26,12 @@ const {
   refreshAfterDelete
 } = useSnippetList()
 
+const {
+  editingSnippet,
+  startEdit,
+  cancelEdit
+} = useSnippetForm(snippets)
+
 async function handleSubmitted(draft: SnippetDraft): Promise<void> {
   const snippetToEdit = editingSnippet.value
 
@@ -36,7 +39,7 @@ async function handleSubmitted(draft: SnippetDraft): Promise<void> {
     if (snippetToEdit) {
       await snippetApi.update(snippetToEdit.id, draft)
 
-      editingSnippet.value = null
+      cancelEdit()
 
       toast.showSuccess('Snippet updated.')
     } else {
@@ -55,20 +58,6 @@ async function handleSubmitted(draft: SnippetDraft): Promise<void> {
     
     toast.showError(message)
   }
-}
-
-function handleEditRequested(id: string): void {
-  const snippet = snippets.value.find((currentSnippet) => currentSnippet.id === id)
-
-  if (!snippet) {
-    return
-  }
-
-  editingSnippet.value = snippet
-}
-
-function handleEditCancelled(): void {
-  editingSnippet.value = null
 }
 
 function handleDeleteRequested(id: string): void {
@@ -124,7 +113,7 @@ async function handleDeleteConfirmed(): Promise<void> {
           :editing-snippet="editingSnippet"
           @submitted="handleSubmitted"
           @validation-error="toast.showError"
-          @cancelled="handleEditCancelled"
+          @cancelled="cancelEdit"
         />
       </section>
 
@@ -152,7 +141,7 @@ async function handleDeleteConfirmed(): Promise<void> {
         <SnippetList
           v-if="snippets.length > 0"
           :snippets="snippets"
-          @edit-requested="handleEditRequested"
+          @edit-requested="startEdit"
           @delete-requested="handleDeleteRequested"
         />
         <Pagination
