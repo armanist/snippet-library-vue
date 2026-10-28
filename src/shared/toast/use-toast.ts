@@ -1,11 +1,11 @@
-import { ref } from "vue";
+import { readonly, ref } from "vue";
 
 export type ToastType = 'success' | 'error'
 
-export function useToast() {
     const message = ref('')
     const type = ref<ToastType>('success')
 
+export function useToast() {
     function showSuccess(text: string): void {
         message.value = text
         type.value = 'success'
@@ -16,5 +16,10 @@ export function useToast() {
         type.value = 'error'
     }
 
-    return {message, type, showSuccess, showError}
+    return {
+        message: readonly(message), 
+        type: readonly(type), 
+        showSuccess, 
+        showError
+    }
 }

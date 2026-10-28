@@ -1,74 +1,33 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import SnippetList from './snippets/SnippetList.vue'
+import SnippetList from './snippets/snippet-list/SnippetList.vue'
 import SnippetForm from './snippets/SnippetForm.vue'
 import Toast from './shared/toast/Toast.vue'
 import ConfirmDialog from './shared/confirm-dialog/ConfirmDialog.vue'
 import Pagination from './shared/Pagination.vue'
 import { useToast } from './shared/toast/use-toast.ts'
 import { useConfirmDialog } from './shared/confirm-dialog/use-confirm-dialog.ts'
+import { useSnippetList } from './snippets/snippet-list/use-snippet-list.ts'
 import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
-import type { PaginationMetadata } from './snippets/contracts/find-snippet.ts'
 import type { SnippetDraft } from './snippets/contracts/create-snippet.ts'
 import type { Snippet } from './snippets/contracts/snippet.ts'
 
 const snippetApi = SNIPPET_DATA_SOURCE
 
-const snippets = ref<Snippet[]>([])
-const isLoading = ref(true)
-const searchTerm = ref('')
-const pagination = ref<PaginationMetadata | null>(null)
-const currentPage = ref(1)
-const refreshKey = ref(0)
 const editingSnippet = ref<Snippet | null>(null)
 
 const toast = useToast();
 const confirmDialog = useConfirmDialog();
-
-const pageSize = 2
-
-watch(
-  [searchTerm, currentPage, refreshKey],
-  ([search, requestedPage], oldValues, onCleanup) => {
-    const controller = new AbortController()
-    const previousSearch = oldValues?.[0]
-    const debounceDelay = previousSearch === undefined || previousSearch === search ? 0 : 300
-
-    const debounceTimer = setTimeout(async () => {
-      isLoading.value = true
-
-      try {
-        const result = await snippetApi.getAll(
-          {
-            search: search.trim(),
-            page: requestedPage,
-            limit: pageSize,
-          },
-          controller.signal,
-        )
-
-        snippets.value = result.snippets
-        pagination.value = result.pagination
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          let message = error instanceof Error ? error.message : 'Failed to load snippets.'
-  
-          toast.showError(message)
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          isLoading.value = false
-        }
-      }
-    }, debounceDelay)
-
-    onCleanup(() => {
-      clearTimeout(debounceTimer)
-      controller.abort()
-    })
-  },
-  { immediate: true },
-)
+const {
+  snippets,
+  isLoading,
+  searchTerm,
+  pagination,
+  refresh,
+  resetToFirstPage,
+  goToPage,
+  refreshAfterDelete
+} = useSnippetList()
 
 async function handleSubmitted(draft: SnippetDraft): Promise<void> {
   const snippetToEdit = editingSnippet.value
@@ -86,7 +45,7 @@ async function handleSubmitted(draft: SnippetDraft): Promise<void> {
       toast.showSuccess('Snippet added.')
     }
 
-    refreshKey.value += 1
+    refresh()
   } catch (error) {
     let message = error instanceof Error
         ? error.message
@@ -96,18 +55,6 @@ async function handleSubmitted(draft: SnippetDraft): Promise<void> {
     
     toast.showError(message)
   }
-}
-
-function handleSearchInput(): void {
-  currentPage.value = 1
-}
-
-function handlePageChange(requestedPage: number): void {
-  if (!pagination.value || requestedPage < 1 || requestedPage > pagination.value.totalPages) {
-    return
-  }
-
-  currentPage.value = requestedPage
 }
 
 function handleEditRequested(id: string): void {
@@ -144,11 +91,7 @@ async function handleDeleteConfirmed(): Promise<void> {
   try {
     await snippetApi.delete(id)
 
-    if (snippets.value.length === 1 && currentPage.value > 1) {
-      currentPage.value -= 1
-    } else {
-      refreshKey.value += 1
-    }
+    refreshAfterDelete()
 
     confirmDialog.close()
 
@@ -193,7 +136,7 @@ async function handleDeleteConfirmed(): Promise<void> {
           Search
           <input
             v-model="searchTerm"
-            @input="handleSearchInput"
+            @input="resetToFirstPage"
             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900"
             type="search"
             name="search"
@@ -217,7 +160,7 @@ async function handleDeleteConfirmed(): Promise<void> {
           class="mt-5"
           :pagination="pagination"
           :disabled="isLoading"
-          @page-change="handlePageChange"
+          @page-change="goToPage"
         />
       </section>
     </section>
