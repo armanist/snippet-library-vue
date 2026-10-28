@@ -8,8 +8,9 @@ import { useToast } from './shared/toast/use-toast.ts'
 import { useConfirmDialog } from './shared/confirm-dialog/use-confirm-dialog.ts'
 import { useSnippetList } from './snippets/snippet-list/use-snippet-list.ts'
 import { useSnippetForm } from './snippets/snippet-form/use-snippet-form'
+import { notifySnippetChanges } from './snippets/services/snippet-changes.ts'
 import { SNIPPET_DATA_SOURCE } from './snippets/services/snippet-data-source'
-import type { SnippetDraft } from './snippets/contracts/create-snippet.ts'
+import type { Snippet } from './snippets/contracts/snippet.ts'
 
 const snippetApi = SNIPPET_DATA_SOURCE
 const toast = useToast();
@@ -20,53 +21,18 @@ const {
   isLoading,
   searchTerm,
   pagination,
-  refresh,
   resetToFirstPage,
   goToPage,
-  refreshAfterDelete
 } = useSnippetList()
 
 const {
   editingSnippet,
   startEdit,
-  cancelEdit
-} = useSnippetForm(snippets)
+  cancelEdit,
+  handleSubmitted
+} = useSnippetForm()
 
-async function handleSubmitted(draft: SnippetDraft): Promise<void> {
-  const snippetToEdit = editingSnippet.value
-
-  try {
-    if (snippetToEdit) {
-      await snippetApi.update(snippetToEdit.id, draft)
-
-      cancelEdit()
-
-      toast.showSuccess('Snippet updated.')
-    } else {
-      await snippetApi.create(draft)
-
-      toast.showSuccess('Snippet added.')
-    }
-
-    refresh()
-  } catch (error) {
-    let message = error instanceof Error
-        ? error.message
-        : snippetToEdit
-          ? 'Failed to update snippet.'
-          : 'Failed to create snippet.'
-    
-    toast.showError(message)
-  }
-}
-
-function handleDeleteRequested(id: string): void {
-  const snippet = snippets.value.find((currentSnippet) => currentSnippet.id === id)
-
-  if (!snippet) {
-    return
-  }
-
+function handleDeleteRequested(snippet: Snippet): void {
   confirmDialog.open(snippet.id, snippet.title)
 }
 
@@ -80,7 +46,7 @@ async function handleDeleteConfirmed(): Promise<void> {
   try {
     await snippetApi.delete(id)
 
-    refreshAfterDelete()
+    notifySnippetChanges()
 
     confirmDialog.close()
 

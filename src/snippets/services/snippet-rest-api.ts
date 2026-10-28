@@ -5,7 +5,6 @@ import type { FindSnippetsResult, SnippetListQuery } from "../contracts/find-sni
 import type { Snippet } from "../contracts/snippet"
 import type { SnippetUpdate } from "../contracts/update-snippet"
 
-
 export class SnippetRestApi implements SnippetDataSource {
   private readonly apiBaseUrl = API_BASE_URL
 

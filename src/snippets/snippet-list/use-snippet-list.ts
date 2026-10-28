@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue'
 import { useToast } from '@/shared/toast/use-toast'
+import { snippetChanges } from '../services/snippet-changes'
 import { SNIPPET_DATA_SOURCE } from '../services/snippet-data-source'
 import type { PaginationMetadata } from '../contracts/find-snippet'
 import type { Snippet } from '../contracts/snippet'
@@ -15,10 +16,9 @@ export function useSnippetList() {
     const searchTerm = ref('')
     const pagination = ref<PaginationMetadata | null>(null)
     const currentPage = ref(1)
-    const refreshKey = ref(0)
 
     watch(
-        [searchTerm, currentPage, refreshKey],
+        [searchTerm, currentPage, snippetChanges],
         ([search, requestedPage], oldValues, onCleanup) => {
             const controller = new AbortController()
             const previousSearch = oldValues?.[0]
@@ -36,6 +36,11 @@ export function useSnippetList() {
                         },
                         controller.signal,
                     )
+
+                    if (result.pagination.totalPages > 0 && requestedPage > result.pagination.totalPages) {
+                        currentPage.value = result.pagination.totalPages
+                        return
+                    }
 
                     snippets.value = result.snippets
                     pagination.value = result.pagination
@@ -60,10 +65,6 @@ export function useSnippetList() {
         { immediate: true },
     )
 
-    function refresh(): void {
-        refreshKey.value += 1
-    }
-
     function resetToFirstPage(): void {
         currentPage.value = 1
     }
@@ -76,22 +77,12 @@ export function useSnippetList() {
         currentPage.value = requestedPage
     }
 
-    function refreshAfterDelete(): void {
-        if (snippets.value.length === 1 && currentPage.value > 1) {
-            currentPage.value -= 1
-        } else {
-            refresh()
-        }
-    }
-
     return {
         snippets,
         isLoading,
         searchTerm,
         pagination,
-        refresh,
         resetToFirstPage,
-        goToPage,
-        refreshAfterDelete,
+        goToPage
     }
 }

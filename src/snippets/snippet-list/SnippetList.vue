@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import SnippetCard from '../SnippetCard.vue';
-import type { Snippet } from '../contracts/snippet.ts'
+import type { Snippet } from '../contracts/snippet'
 
 const props = defineProps<{ snippets: Snippet[] }>()
 
 const emit = defineEmits<{
-  (event: 'edit-requested', id: string): void
-  (event: 'delete-requested', id: string): void
+  (event: 'edit-requested', snippet: Snippet): void
+  (event: 'delete-requested', snippet: Snippet): void
 }>()
 
-function handleEdit(id: string): void {
-  emit('edit-requested', id)
+function handleEdit(snippet: Snippet): void {
+  emit('edit-requested', snippet)
 }
 
-function handleDelete(id: string): void {
-  emit('delete-requested', id)
+function handleDelete(snippet: Snippet): void {
+  emit('delete-requested', snippet)
 }
 </script>
 

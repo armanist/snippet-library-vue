@@ -4,16 +4,16 @@ import type { Snippet } from './contracts/snippet'
 const props = defineProps<{ snippet: Snippet }>()
 
 const emit = defineEmits<{
-  (event: 'edit-requested', id: string): void
-  (event: 'delete-requested', id: string): void
+  (event: 'edit-requested', snippet: Snippet): void
+  (event: 'delete-requested', snippet: Snippet): void
 }>()
 
 function handleEdit(): void {
-  emit('edit-requested', props.snippet.id)
+  emit('edit-requested', props.snippet)
 }
 
 function handleDelete(): void {
-  emit('delete-requested', props.snippet.id)
+  emit('delete-requested', props.snippet)
 }
 </script>
 
