@@ -2,8 +2,8 @@ import { readonly, ref } from "vue";
 
 export type ToastType = 'success' | 'error'
 
-    const message = ref('')
-    const type = ref<ToastType>('success')
+const message = ref('')
+const type = ref<ToastType>('success')
 
 export function useToast() {
     function showSuccess(text: string): void {
@@ -17,9 +17,9 @@ export function useToast() {
     }
 
     return {
-        message: readonly(message), 
-        type: readonly(type), 
-        showSuccess, 
+        message: readonly(message),
+        type: readonly(type),
+        showSuccess,
         showError
     }
 }

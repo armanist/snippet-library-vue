@@ -17,11 +17,11 @@ export function useConfirmDialog() {
         pendingTitle.value = ''
     }
 
-    return { 
-        visible: readonly(visible), 
-        pendingId: readonly(pendingId), 
-        pendingTitle: readonly(pendingTitle), 
-        open, 
-        close 
+    return {
+        visible: readonly(visible),
+        pendingId: readonly(pendingId),
+        pendingTitle: readonly(pendingTitle),
+        open,
+        close
     }
 }

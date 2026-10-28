@@ -40,22 +40,37 @@ A Vue 3 frontend for saving, finding, editing, and deleting small code snippets.
 
 3. Open `http://localhost:5173`.
 
-## Configuration
+## Switching between REST and GraphQL
 
-The only setting is the transport the app uses to talk to the API. It is read from a Vite env file:
+The app can talk to the API over REST or over GraphQL. The choice is one variable in a Vite env file:
 
 | File | Used by |
 | --- | --- |
 | `.env.development` | `npm run dev` |
 | `.env.production` | `npm run build` |
 
+To use GraphQL:
+
 ```sh
 VITE_SNIPPET_TRANSPORT=graphql
 ```
 
-Allowed values are `rest` and `graphql`. Restart `npm run dev` after changing it. The API address is set in `src/api-config.ts`.
+To use REST:
 
-Do not put secrets in these files. Values starting with `VITE_` are embedded in the browser bundle. Personal overrides belong in `*.local` files, which are ignored by Git.
+```sh
+VITE_SNIPPET_TRANSPORT=rest
+```
+
+Then restart `npm run dev`, because Vite reads env files only at startup. For a production build, edit `.env.production` and run `npm run build` again.
+
+To check which transport is active, open the browser's DevTools, go to the Network tab, and reload the page:
+
+- GraphQL: requests go to `http://localhost:3000/graphql` (`POST`).
+- REST: requests go to `http://localhost:3000/snippets` (`GET`, `POST`, `PATCH`, `DELETE`).
+
+The screens behave the same either way. Only the requests differ.
+
+Other configuration: the API address is set in `src/api-config.ts`. Do not put secrets in the env files, because values starting with `VITE_` are embedded in the browser bundle. Personal overrides belong in `*.local` files, which are ignored by Git.
 
 ## Scripts
 
