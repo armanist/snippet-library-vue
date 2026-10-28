@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Snippet } from './contracts/snippet'
+import type { Snippet } from '../contracts/snippet';
 
 const props = defineProps<{ snippet: Snippet }>()
 
