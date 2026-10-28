@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SnippetCard from '../SnippetCard.vue';
+import SnippetCard from './SnippetCard.vue';
 import type { Snippet } from '../contracts/snippet'
 
 const props = defineProps<{ snippets: Snippet[] }>()
