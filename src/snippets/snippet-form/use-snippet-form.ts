@@ -1,6 +1,6 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useToast } from '@/shared/toast/use-toast'
-import { notifySnippetChanges } from '../services/snippet-changes'
+import { deletedSnippetId, notifySnippetChanges } from '../services/snippet-changes'
 import { SNIPPET_DATA_SOURCE } from '../services/snippet-data-source'
 import type { SnippetDraft } from '../contracts/create-snippet'
 import type { Snippet } from '../contracts/snippet'
@@ -19,6 +19,12 @@ export function useSnippetForm() {
     function cancelEdit(): void {
         editingSnippet.value = null
     }
+
+    watch(deletedSnippetId, (id) => {
+        if (id && id === editingSnippet.value?.id) {
+            cancelEdit()
+        }
+    })
 
     async function handleSubmitted(draft: SnippetDraft): Promise<void> {
         const snippetToEdit = editingSnippet.value

@@ -1,6 +1,6 @@
 import { useToast } from "@/shared/toast/use-toast"
 import { useConfirmDialog } from "@/shared/confirm-dialog/use-confirm-dialog"
-import { notifySnippetChanges } from "../services/snippet-changes"
+import { notifySnippetChanges, notifySnippetDeleted } from "../services/snippet-changes"
 import { SNIPPET_DATA_SOURCE } from "../services/snippet-data-source"
 import type { Snippet } from "../contracts/snippet"
 
@@ -24,6 +24,7 @@ export function useSnippetDelete() {
         try {
             await snippetApi.delete(id)
 
+            notifySnippetDeleted(id)
             notifySnippetChanges()
 
             confirmDialog.close()
