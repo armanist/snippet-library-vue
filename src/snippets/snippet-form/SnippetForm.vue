@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { languages } from '../contracts/snippet-language'
 import type { Language } from '../contracts/snippet-language'
 import type { Snippet } from '../contracts/snippet'
@@ -10,6 +10,12 @@ const title = ref('')
 const language = ref<Language>(languages[0])
 const code = ref('')
 const tags = ref('')
+const titleTouched = ref(false)
+const codeTouched = ref(false)
+
+const titleError = computed(() => (titleTouched.value && !title.value ? 'Title is required.' : ''))
+const codeError = computed(() => (codeTouched.value && !code.value ? 'Code is required.' : ''))
+
 
 const props = defineProps<{
   editingSnippet: Snippet | null
@@ -28,6 +34,8 @@ watch(
     language.value = snippet?.language ?? languages[0]
     code.value = snippet?.code ?? ''
     tags.value = snippet?.tags.join(', ') ?? ''
+    titleTouched.value = false
+    codeTouched.value = false
   },
   { immediate: true },
 )
@@ -37,6 +45,8 @@ function resetForm(): void {
   language.value = languages[0]
   code.value = ''
   tags.value = ''
+  titleTouched.value = false
+  codeTouched.value = false
 }
 
 function handleSubmit(): void {
@@ -45,6 +55,10 @@ function handleSubmit(): void {
 
   if (!normalizedTitle || !normalizedCode) {
     emit('validation-error', 'Title and code are required.')
+    
+    titleTouched.value = true
+    codeTouched.value = true
+    
     return
   }
 
@@ -69,10 +83,12 @@ function handleSubmit(): void {
       Title
       <input
         v-model="title"
+        @blur="titleTouched=true"
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
         type="text"
         placeholder="PHP foreach loop"
       />
+      <p v-if="titleError" class="text-xs font-normal text-red-600">{{ titleError }}</p>
     </label>
 
     <label class="grid gap-1.5 text-sm font-semibold text-slate-700">
@@ -91,10 +107,12 @@ function handleSubmit(): void {
       Code
       <textarea
         v-model="code"
+        @blur="codeTouched=true"
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
         rows="8"
         placeholder="Paste your code here"
       />
+      <p v-if="codeError" class="text-xs font-normal text-red-600">{{ codeError }}</p>
     </label>
 
     <label class="grid gap-1.5 text-sm font-semibold text-slate-700">
