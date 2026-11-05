@@ -5,17 +5,16 @@ import type { Language } from '../contracts/snippet-language'
 import type { Snippet } from '../contracts/snippet'
 import type { SnippetDraft } from '../contracts/create-snippet'
 
-
 const title = ref('')
 const language = ref<Language>(languages[0])
 const code = ref('')
 const tags = ref('')
 const titleTouched = ref(false)
 const codeTouched = ref(false)
+const titleInput = ref<HTMLInputElement | null>(null)
 
 const titleError = computed(() => (titleTouched.value && !title.value ? 'Title is required.' : ''))
 const codeError = computed(() => (codeTouched.value && !code.value ? 'Code is required.' : ''))
-
 
 const props = defineProps<{
   editingSnippet: Snippet | null
@@ -30,6 +29,10 @@ const emit = defineEmits<{
 watch(
   () => props.editingSnippet,
   (snippet) => {
+    if (snippet) {
+      titleInput.value?.focus()
+    }
+
     title.value = snippet?.title ?? ''
     language.value = snippet?.language ?? languages[0]
     code.value = snippet?.code ?? ''
@@ -55,10 +58,10 @@ function handleSubmit(): void {
 
   if (!normalizedTitle || !normalizedCode) {
     emit('validation-error', 'Title and code are required.')
-    
+
     titleTouched.value = true
     codeTouched.value = true
-    
+
     return
   }
 
@@ -83,7 +86,8 @@ function handleSubmit(): void {
       Title
       <input
         v-model="title"
-        @blur="titleTouched=true"
+        ref="titleInput"
+        @blur="titleTouched = true"
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
         type="text"
         placeholder="PHP foreach loop"
@@ -107,7 +111,7 @@ function handleSubmit(): void {
       Code
       <textarea
         v-model="code"
-        @blur="codeTouched=true"
+        @blur="codeTouched = true"
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
         rows="8"
         placeholder="Paste your code here"
