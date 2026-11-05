@@ -1,9 +1,9 @@
 import { API_BASE_URL } from '@/api-config'
 import type { SnippetDataSource } from '../contracts/snippet-data-source'
-import type { SnippetDraft } from "../contracts/create-snippet"
-import type { FindSnippetsResult, SnippetListQuery } from "../contracts/find-snippet"
-import type { Snippet } from "../contracts/snippet"
-import type { SnippetUpdate } from "../contracts/update-snippet"
+import type { SnippetDraft } from '../contracts/create-snippet'
+import type { FindSnippetsResult, SnippetListQuery } from '../contracts/find-snippet'
+import type { Snippet } from '../contracts/snippet'
+import type { SnippetUpdate } from '../contracts/update-snippet'
 
 export class SnippetRestApi implements SnippetDataSource {
   private readonly apiBaseUrl = API_BASE_URL
@@ -25,9 +25,7 @@ export class SnippetRestApi implements SnippetDataSource {
 
     const response = await fetch(url, { signal })
 
-    if (!response.ok) {
-      throw new Error(`Failed to load snippets (${response.status})`)
-    }
+    await this.throwIfFailed(response, 'Failed to load snippets')
 
     return (await response.json()) as FindSnippetsResult
   }
@@ -41,9 +39,7 @@ export class SnippetRestApi implements SnippetDataSource {
       body: JSON.stringify(draft),
     })
 
-    if (!response.ok) {
-      throw new Error(`Failed to create snippet (${response.status})`)
-    }
+    await this.throwIfFailed(response, 'Failed to create snippet')
 
     return (await response.json()) as Snippet
   }
@@ -57,9 +53,7 @@ export class SnippetRestApi implements SnippetDataSource {
       body: JSON.stringify(changes),
     })
 
-    if (!response.ok) {
-      throw new Error(`Failed to update snippet (${response.status})`)
-    }
+    await this.throwIfFailed(response, 'Failed to update snippet')
 
     return (await response.json()) as Snippet
   }
@@ -69,8 +63,21 @@ export class SnippetRestApi implements SnippetDataSource {
       method: 'DELETE',
     })
 
-    if (!response.ok) {
-      throw new Error(`Failed to delete snippet (${response.status})`)
+    await this.throwIfFailed(response, 'Failed to delete snippet')
+  }
+
+  private async throwIfFailed(response: Response, fallbackMessage: string): Promise<void> {
+    if (response.ok) {
+      return
     }
+
+    const body: unknown = await response.json().catch(() => null)
+
+    const message =
+      typeof body === 'object' && body !== null && 'message' in body
+        ? [body.message].flat().join('; ')
+        : `${fallbackMessage} (${response.status})`
+
+    throw new Error(message)
   }
 }
